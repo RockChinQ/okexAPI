@@ -142,7 +142,7 @@ def updateStatus():
         fillcl="red"
         if (CandleMgr.currentCandle.close / VirtualTrading.lsTradingPrice)>1:
             fillcl="green"
-        canvas.create_text(65, 390, text="%.7f" % VirtualTrading.lsTradingPrice + " %.4f" % (
+        canvas.create_text(65, 390, text="%.7f" % VirtualTrading.lsTradingPrice + " %.2f" % (
                     CandleMgr.currentCandle.close / VirtualTrading.lsTradingPrice),fill=fillcl)
 
 

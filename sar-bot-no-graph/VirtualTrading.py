@@ -12,7 +12,6 @@ burntFund = 0.0
 burntProduct = 0.0
 
 lsTradingPrice = -1.0
-lsTradingCandle=0
 
 nonSellRange = 0.0035  # 0.35%
 nonBuyRange = 0.005  # 0.5%
@@ -39,7 +38,8 @@ def sellAll():
         priceRange = abs(CandleMgr.currentCandle.close - CandleMgr.previousCandle.open)
         priceOpen = CandleMgr.previousCandle.open
 
-    if priceRange / priceOpen > nonSellRange:
+    if abs(CandleMgr.currentCandle.close - lsTradingPrice) / CandleMgr.currentCandle.open > nonSellRange and \
+            priceRange / priceOpen > nonSellRange:
         __doSell()
         return True
     # else:
@@ -48,7 +48,7 @@ def sellAll():
 
 
 def __doSell():
-    global fund, product, burntFund, lsTradingPrice,lsTradingCandle
+    global fund, product, burntFund, lsTradingPrice
     fund = fund + float(product) * float(CandleMgr.currentCandle.close) * (1.0 - processRate)
     burntFund = burntFund + float(product) * float(CandleMgr.currentCandle.close) * processRate
     print(time.strftime("%m-%d,%H:%M:%S",
@@ -62,11 +62,10 @@ def __doSell():
     f.close()
     product = 0.0
     lsTradingPrice = CandleMgr.currentCandle.close
-    lsTradingCandle= len(CandleMgr.candles)
 
 
 def buyAll():
-    global fund, product, burntProduct, burntFund, lsTradingPrice,lsTradingCandle
+    global fund, product, burntProduct, burntFund, lsTradingPrice
     if fund == 0:
         # print("not fund to afford")
         return False
@@ -76,7 +75,8 @@ def buyAll():
     if CandleMgr.previousCandle.isUp() and CandleMgr.currentCandle.isUp():
         priceRange = abs(CandleMgr.currentCandle.close - CandleMgr.previousCandle.open)
         priceOpen = CandleMgr.previousCandle.open
-    if priceRange / priceOpen > nonBuyRange:
+    if abs(CandleMgr.currentCandle.close - lsTradingPrice) / CandleMgr.currentCandle.open > nonBuyRange and \
+            priceRange / priceOpen > nonBuyRange:
         print(time.strftime("%m-%d,%H:%M:%S", time.localtime()) +
               " BUY ALL @ %.7f" % CandleMgr.currentCandle.close + " fee(p):%.4f" % (
                       float(fund) / float(CandleMgr.currentCandle.close) * processRate))
@@ -90,7 +90,6 @@ def buyAll():
         f.close()
         fund = 0.0
         lsTradingPrice = CandleMgr.currentCandle.close
-        lsTradingCandle= len(CandleMgr.candles)
 
         return True
     # else:

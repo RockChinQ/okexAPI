@@ -4,7 +4,6 @@ import websocket
 import json
 import CandleMgr
 import threading
-import KGraph
 import VirtualTrading
 import Strategy
 
@@ -12,9 +11,9 @@ print(str(sys.argv))
 
 conf = open("bot.conf", "r")
 
-confs = conf.readline(1000).replace("\n","").split(" ")
+confs = conf.readline(1000).split(" ")
 if confs[0].startswith("#"):
-    confs=conf.readline(1000).replace("\n","").split(" ")
+    confs=conf.readline(1000).split(" ")
 print(str(confs))
 PRODUCT = confs[0]
 VirtualTrading.initialFund = float(confs[1])
@@ -25,11 +24,7 @@ VirtualTrading.takeProfit=float(confs[3])
 
 VirtualTrading.init(initialFund=VirtualTrading.initialFund)
 
-if len(sys.argv) >= 2:
-    if str(sys.argv[1]) == "nogui":
-        KGraph.enable = False
 VirtualTrading.PRODUCT = PRODUCT
-threading.Thread(target=KGraph.init, args=(PRODUCT,)).start()
 PUBLIC_URL = "wss://ws.okex.com:8443/ws/v5/public"
 
 ws = 0
@@ -68,7 +63,6 @@ def closeCandle():
     CandleMgr.candles.append(CandleMgr.currentCandle)
     CandleMgr.previousCandle = CandleMgr.currentCandle
     CandleMgr.currentCandle = CandleMgr.Candle()
-    KGraph.currentX = KGraph.currentX + 1
     # VirtualTrading.lsTradingPrice = -1.0
 
 
@@ -135,12 +129,9 @@ REPAINT_INTERVAL = 0.5
 def repaintTimer():
     count = 0
     while True:
-        KGraph.updateStatus()
-        KGraph.updateCurrent()
         time.sleep(REPAINT_INTERVAL)
         count = count + 1
         if count == 10:
-            KGraph.resetCanvas()
             count = 0
 
 
