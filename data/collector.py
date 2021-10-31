@@ -1,5 +1,8 @@
 import sys
+import threading
 import time
+import traceback
+
 import websocket
 import json
 import MySQLdb
@@ -51,7 +54,7 @@ def connect():
     db = MySQLdb.connect(confs[0], confs[1], confs[2], confs[3], charset='utf8')
     cursor = db.cursor()
     ts = time.strftime("%y_%m_%d_%H_%M_%S", time.localtime())
-    tableName = confs2[0].replace("-","_") + "_" + ts
+    tableName = confs2[0].replace("-", "_") + "_" + ts
     print(tableName)
     createTable = """CREATE TABLE `""" + tableName + """` (
 	`id` int unsigned auto_increment,
@@ -64,6 +67,26 @@ def connect():
 
 
 connect()
+
+
+def storageWatchdog():
+
+    db2 = MySQLdb.connect(confs[0], confs[1], confs[2],"information_schema", charset='utf8')
+    cursor2 = db2.cursor()
+    while 1:
+        try:
+            exec="select concat(round(sum(data_length/1024/1024),2),'MB') as data from tables where table_schema='coinbot' and table_name='" + tableName + "'"
+            # print(exec)
+            cursor2.execute(exec)
+            results = cursor2.fetchall()
+            print(time.strftime("%m-%d,%H:%M:%S", time.localtime()) + " Size of table:" + tableName + " is " + str(results[0][0]))
+        except BaseException:
+            traceback.print_exc()
+            print(time.strftime("%m-%d,%H:%M:%S", time.localtime()) +" Failed to fetch size.")
+        time.sleep(60 * 5)
+
+
+threading.Thread(target=storageWatchdog).start()
 
 
 def loopRecv():
@@ -80,9 +103,13 @@ def loopRecv():
         receive = json.loads(dataJSON)
 
         insert = "INSERT INTO " + tableName + " (timeStamp,price) values (%d" % int(
-            receive["data"][0][0]) + ",%.8f" % float(receive["data"][0][4])+");"
-        print(insert)
-        cursor.execute(insert)
-        db.commit()
+            receive["data"][0][0]) + ",%.8f" % float(receive["data"][0][4]) + ");"
+        # print(insert)
+        try:
+            cursor.execute(insert)
+            db.commit()
+        except:
+            print("failed to insert")
+
 
 loopRecv()
